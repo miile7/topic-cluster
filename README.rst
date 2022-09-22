@@ -35,7 +35,7 @@ The program can either be run as a pure command line program. For this run ``top
 
 .. code-block:: bash
 
-    usage: topic-cluster [-h] [--version] [-v] [-vv] [-t TOPICS] [-f FEATURES] [--no-title] [--no-abstract] [bibtex_path]
+    usage: topic_cluster [-h] [--version] [-v] [-vv] [-t TOPICS] [-f FEATURES] [--no-title] [--no-abstract] [bibtex_path]
 
 **Positional optional arguments**
 
