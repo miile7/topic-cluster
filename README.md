@@ -23,13 +23,13 @@ poetry install
 
 To execute the program use
 ```bash
-poetry run python -m <topic_cluster>
+poetry run python -m topic_cluster
 ```
 
 The following arguments are supported:
 
 ``` bash
-usage: topic_cluster [-h] [--version] [-v] [-vv] [-t TOPICS] [-f FEATURES] [--no-title] [--no-abstract] [bibtex_path]
+topic_cluster [-h] [--version] [-v] [-vv] [-t TOPICS] [-f FEATURES] [--no-title] [--no-abstract] [bibtex_path]
 ```
 
 **Positional optional arguments**
