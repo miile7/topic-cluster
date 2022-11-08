@@ -1,9 +1,24 @@
-[build-system]
-# AVOID CHANGING REQUIRES: IT WILL BE UPDATED BY PYSCAFFOLD!
-requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5"]
-build-backend = "setuptools.build_meta"
+[tool.poetry]
+name = "topic_cluster"
+version = "2.0.0"
+description = "Cluster papers into topics according to their titles and abstracts."
+authors = ["miile7"]
+readme = "README"
 
-[tool.setuptools_scm]
-# For smarter version schemes and other configuration options,
-# check out https://github.com/pypa/setuptools_scm
-version_scheme = "no-guess-dev"
+[tool.poetry.dependencies]
+python = "^3.8"
+easygui = "^0.98.3"
+easysettings = "^4.0.1"
+matplotlib = "^3.6.2"
+numpy = "^1.23.4"
+bibtexparser = "^1.4.0"
+scikit-learn = "^1.1.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+mypy = "*"
+flake8 = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

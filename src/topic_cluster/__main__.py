@@ -1,4 +1,4 @@
-from topic_cluster.skeleton import run
+from topic_cluster.topic_cluster import main
 
 if __name__ == '__main__':
-    run()
+    main()
