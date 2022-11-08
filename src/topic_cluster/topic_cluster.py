@@ -49,6 +49,9 @@ class ParserArgs(TypedDict, total=False):
     no_abstract: bool
     feature_count: int
     topic_count: int
+    no_feature_list: bool
+    no_plot: bool
+    ignore_last_bibtex_path: bool
 
 
 class Model(Protocol):
@@ -79,8 +82,13 @@ def save_last_open_file(open_path: str) -> None:
     settings.save()
 
 
-def get_bibtex_path_by_file_open() -> Optional[str]:
+def get_bibtex_path_by_file_open(use_last_path: bool = True) -> Optional[str]:
     open_path = get_last_open_file()
+
+    if open_path is not None and use_last_path:
+        logger.debug(f"Using bibtex path ('{open_path}') of previous run")
+        return open_path
+
     logger.debug("Showing file open dialog")
 
     open_path = cast(
@@ -104,12 +112,17 @@ def get_bibtex_path_by_file_open() -> Optional[str]:
 
 
 def get_documents(
-    bibtex_path: Optional[str] = None, title: bool = True, abstract: bool = True
+    bibtex_path: Optional[str] = None,
+    use_last_path: bool = True,
+    title: bool = True,
+    abstract: bool = True,
 ) -> List[str]:
     logger.info("Creating documents")
 
     open_path = (
-        bibtex_path if bibtex_path is not None else get_bibtex_path_by_file_open()
+        bibtex_path
+        if bibtex_path is not None
+        else get_bibtex_path_by_file_open(use_last_path)
     )
 
     if open_path is None:
@@ -170,6 +183,33 @@ def get_features(
     lda.fit(term_frequency)
 
     return lda, term_frequency, feature_names
+
+
+def get_longest_word_count(words: NDArray[np.string_]) -> int:
+    return max((len(word) for word in words))
+
+
+def print_features(frequencies: csr_matrix, feature_names: NDArray[np.string_]) -> None:
+    logger.debug("Print features")
+    feature_frequencies = np.sum(frequencies.toarray(), axis=0)
+
+    sorted_frequency_table = sorted(
+        zip(feature_names, feature_frequencies), key=lambda f: f[1], reverse=True
+    )
+
+    feature_label = "Feature name"
+    frequency_label = "Frequency (in all texts)"
+    row_width = max(get_longest_word_count(feature_names), len(feature_label))
+
+    template = f"{{:>{row_width}}} | {{}}"
+
+    header = template.format(feature_label, frequency_label)
+
+    print(header)
+    print(f"{'-' * len(feature_label)}-+-{'-' * len(frequency_label)}")
+
+    for name, frequency in sorted_frequency_table:
+        print(template.format(name, frequency))
 
 
 def flatten(iter: StackedIterable) -> List[Any]:
@@ -254,6 +294,17 @@ def get_arg_parser() -> ArgumentParser:
         type=Path,
     )
     parser.add_argument(
+        "--ignore-last-bibtex-path",
+        "-i",
+        help=(
+            "Always ask for the bibtex path (and do not use the one from the "
+            "previous run) if the bibtex_path is not given"
+        ),
+        action="store_true",
+        dest="ignore_last_bibtex_path",
+        default=False,
+    )
+    parser.add_argument(
         "-t",
         "--topics",
         type=int,
@@ -286,6 +337,20 @@ def get_arg_parser() -> ArgumentParser:
         help="Use to exclude the abstract from the feature detection",
         default=False,
     )
+    parser.add_argument(
+        "--no-plot",
+        dest="no_plot",
+        action="store_true",
+        help="Do not show the plot",
+        default=False,
+    )
+    parser.add_argument(
+        "--no-feature-list",
+        dest="no_feature_list",
+        action="store_true",
+        help="Do not show the feature-frequency list",
+        default=False,
+    )
 
     return parser
 
@@ -301,12 +366,21 @@ def main(**kwargs: Unpack[ParserArgs]) -> None:
         f"Calculating {args.topic_count} topics with {args.feature_count} features"
     )
 
-    documents = get_documents(args.bibtex_path, not args.no_title, not args.no_abstract)
+    documents = get_documents(
+        args.bibtex_path,
+        not args.ignore_last_bibtex_path,
+        not args.no_title,
+        not args.no_abstract,
+    )
     model, frequencies, feature_names = get_features(
         documents, args.feature_count, args.topic_count
     )
 
-    plot_top_words(model, feature_names)
+    if not args.no_feature_list:
+        print_features(frequencies, feature_names)
+
+    if not args.no_plot:
+        plot_top_words(model, feature_names)
 
     logger.debug("Done, showing plot")
     plt.show()

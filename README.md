@@ -29,7 +29,7 @@ poetry run python -m topic_cluster
 The following arguments are supported:
 
 ``` bash
-topic_cluster [-h] [--version] [-v] [-vv] [-t TOPICS] [-f FEATURES] [--no-title] [--no-abstract] [bibtex_path]
+topic_cluster [-h] [--version] [-v] [-vv] [--ignore-last-bibtex-path] [-t TOPIC_COUNT] [-f FEATURE_COUNT] [--no-title] [--no-abstract] [--no-plot] [--no-feature-list] [bibtex_path]
 ```
 
 **Positional optional arguments**
@@ -38,17 +38,21 @@ topic_cluster [-h] [--version] [-v] [-vv] [-t TOPICS] [-f FEATURES] [--no-title]
 
 **Optional arguments**
 
-  - `-h`, `--help`: Show this help message and exit
-  - `--version`: Show program's version number and exit
-  - `-v`, `--verbose`: Set loglevel to INFO
-  - `-vv`, `--very-verbose`: Set loglevel to DEBUG
-  - `-t TOPICS`, `--topics TOPICS`: Set the number of topics, default is
-    3
-  - `-f FEATURES`, `--features FEATURES`: Set the number of features to
-    for each topic, default is 10
-  - `--no-title`: Use to exclude the title from the feature detection
-  - `--no-abstract`: Use to exclude the abstract from the feature
-    detection
+  - `-h`, `--help`:            Show this help message and exit
+  - `--version`, `-V`:         Show the program's version number and exit
+  - `-v`, `--verbose`:         Set the loglevel to INFO
+  - `-vv`, `--very-verbose`:   Set the loglevel to DEBUG
+  - `--ignore-last-bibtex-path`, `-i`:
+                               Always ask for the bibtex path (and do not use the one
+                               from the previous run) if the bibtex_path is not given
+  - `-t TOPIC_COUNT`, `--topics TOPIC_COUNT`:
+                               The number of topics, default is 3
+  - `-f FEATURE_COUNT`, `--features FEATURE_COUNT`:
+                               The number of features to per topic, default is 7
+  - `--no-title`:              Use to exclude the title from the feature detection
+  - `--no-abstract`:           Use to exclude the abstract from the feature detection
+  - `--no-plot`:               Do not show the plot
+  - `--no-feature-list`:       Do not show the feature-frequency list
 
 If no `bibtex_path` is given, a dialog will ask for the bibtex path. The
 topic and feature count will have the default values and title and

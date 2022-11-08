@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "topic_cluster"
-version = "2.0.0"
+version = "2.1.0"
 description = "Cluster papers into topics according to their titles and abstracts."
 authors = ["miile7"]
 readme = "README.md"
