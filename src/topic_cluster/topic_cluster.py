@@ -3,7 +3,7 @@ from bibtexparser import load  # ignore [import]
 from collections import defaultdict
 from easygui import fileopenbox
 from easysettings import EasySettings
-from logging import DEBUG, INFO, getLogger
+from logging import DEBUG, INFO, WARNING, basicConfig, getLogger
 from numpy.typing import NDArray
 from os import path
 from pathlib import Path
@@ -37,8 +37,11 @@ NAME = "topic_cluster"
 NON_ASCII = compile(r"[\W]+")
 CONFIG_PATH = path.join(gettempdir(), "topic_cluster.conf")
 CONFIG_OPEN_PATH_INDEX = "bibtex_open_path"
+DEFAULT_LOG_LEVEL = WARNING
 DEFAULT_NUMBER_OF_TOPICS = 3
 DEFAULT_NUMBER_OF_FEATURES = 7
+DEFAULT_NGRAMS = (1, 3)
+NGRAMS_MAX = 6
 
 logger = getLogger("topic_cluster")
 
@@ -86,7 +89,7 @@ def get_bibtex_path_by_file_open(use_last_path: bool = True) -> Optional[str]:
     open_path = get_last_open_file()
 
     if open_path is not None and use_last_path:
-        logger.debug(f"Using bibtex path ('{open_path}') of previous run")
+        logger.info(f"Using bibtex path ('{open_path}') of previous run")
         return open_path
 
     logger.debug("Showing file open dialog")
@@ -165,10 +168,12 @@ def get_documents(
 
 
 def get_features(
-    texts: List[str], feature_count: int, topic_count: int
+    texts: List[str], feature_count: int, topic_count: int, ngrams: Tuple[int, int]
 ) -> Tuple[LatentDirichletAllocation, csr_matrix, NDArray[np.string_]]:
     logger.info(f"Calculating count vectorizer for {feature_count} features")
-    count_vectorizer = CountVectorizer(stop_words="english", max_features=feature_count)
+    count_vectorizer = CountVectorizer(
+        stop_words="english", max_features=feature_count, ngram_range=ngrams
+    )
     term_frequency = count_vectorizer.fit_transform(texts)
     feature_names = count_vectorizer.get_feature_names_out()
 
@@ -277,6 +282,7 @@ def get_arg_parser() -> ArgumentParser:
         help="Set the loglevel to INFO",
         action="store_const",
         const=INFO,
+        default=DEFAULT_LOG_LEVEL
     )
     parser.add_argument(
         "-vv",
@@ -355,8 +361,41 @@ def get_arg_parser() -> ArgumentParser:
         help="Do not show the feature-frequency list",
         default=False,
     )
+    parser.add_argument(
+        "--min-ngrams",
+        dest="min_ngrams",
+        help=(
+            "The minimum number of words to use for feature extraction, default: "
+            f"{DEFAULT_NGRAMS[0]}"
+        ),
+        type=int,
+        choices=range(1, NGRAMS_MAX),
+        default=DEFAULT_NGRAMS[0]
+    )
+    parser.add_argument(
+        "--max-ngrams",
+        dest="max_ngrams",
+        help=(
+            "The maximum number of words to use for feature extraction, default: "
+            f"{DEFAULT_NGRAMS[1]}"
+        ),
+        type=int,
+        choices=range(1, NGRAMS_MAX),
+        default=DEFAULT_NGRAMS[1]
+    )
 
     return parser
+
+
+def init_logging(args: Namespace) -> None:
+    if args.log_level < INFO:
+        log_format = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
+    else:
+        log_format = "%(levelname)s: %(message)s"
+
+    basicConfig(
+        level=args.log_level, format=log_format, datefmt="%Y-%m-%d %H:%M:%S"
+    )
 
 
 def main(**kwargs: Unpack[ParserArgs]) -> None:
@@ -365,6 +404,8 @@ def main(**kwargs: Unpack[ParserArgs]) -> None:
         args = Namespace(**kwargs)
     else:
         args = parser.parse_args()
+
+    init_logging(args)
 
     logger.info(
         f"Calculating {args.topic_count} topics with {args.feature_count} features"
@@ -376,12 +417,18 @@ def main(**kwargs: Unpack[ParserArgs]) -> None:
         not args.no_title,
         not args.no_abstract,
     )
+
     model, frequencies, feature_names = get_features(
-        documents, args.feature_count, args.topic_count
+        documents, args.feature_count, args.topic_count, (args.min_ngrams, args.max_ngrams)
     )
 
     if not args.no_feature_list:
         print_features(frequencies, feature_names)
+
+        if args.min_ngrams == 1 and args.no_plot:
+            print(
+                f"Hint: Re-run {NAME} with --min-ngrams=2 (or more) to have additional results."
+            )
 
     if not args.no_plot:
         plot_top_words(model, feature_names)
