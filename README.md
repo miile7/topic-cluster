@@ -55,6 +55,12 @@ topic_cluster [-h] [--version] [-v] [-vv] [--ignore-last-bibtex-path] [-t TOPIC_
   - `--no-abstract`:           Use to exclude the abstract from the feature detection
   - `--no-plot`:               Do not show the plot
   - `--no-feature-list`:       Do not show the feature-frequency list
+  - `--min-ngrams {1,2,3,4,5}`:
+                               The minimum number of words to use for feature extraction,
+                               default: 1
+  - `--max-ngrams {1,2,3,4,5}`:
+                               The maximum number of words to use for feature extraction,
+                               default: 3
 
 If no `bibtex_path` is given, a dialog will ask for the bibtex path. The
 topic and feature count will have the default values and title and
