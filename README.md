@@ -34,7 +34,9 @@ topic_cluster [-h] [--version] [-v] [-vv] [--ignore-last-bibtex-path] [-t TOPIC_
 
 **Positional optional arguments**
 
-  - `bibtex_path`: The file path of the bibtex file to read
+  - `bibtex_path`: The file path of the bibtex file to read, if not given, the path from
+    the last call is used, if this is the first call, the program will ask for it via a
+    file open dialog
 
 **Optional arguments**
 
